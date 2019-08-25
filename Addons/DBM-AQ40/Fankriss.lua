@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Fankriss", "DBM-AQ40", 1)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516161007")
+mod:SetRevision("20190819212906")
 mod:SetCreatureID(15510)
 mod:SetEncounterID(712)
 mod:SetModelID(15743)
@@ -33,35 +33,44 @@ function mod:OnCombatEnd()
 	self:UnregisterShortTermEvents()
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args.spellId == 25646 then
-		local amount = args.amount or 1
-		timerWound:Show(args.destName)
-		if amount >= 5 then
-			if args:IsPlayer() then
-				specWarnWound:Show(amount)
-				specWarnWound:Play("stackhigh")
-			elseif not DBM:UnitDebuff("player", args.spellName) and not UnitIsDeadOrGhost("player") then
-				specWarnWoundTaunt:Show(args.destName)
-				specWarnWoundTaunt:Play("tauntboss")
+do
+	local MortalWound = DBM:GetSpellInfo(25646)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args.spellId == 25646 then
+		if args.spellName == MortalWound then
+			local amount = args.amount or 1
+			timerWound:Show(args.destName)
+			if amount >= 5 then
+				if args:IsPlayer() then
+					specWarnWound:Show(amount)
+					specWarnWound:Play("stackhigh")
+				elseif not DBM:UnitDebuff("player", args.spellName) and not UnitIsDeadOrGhost("player") then
+					specWarnWoundTaunt:Show(args.destName)
+					specWarnWoundTaunt:Play("tauntboss")
+				else
+					warnWound:Show(args.destName, amount)
+				end
 			else
 				warnWound:Show(args.destName, amount)
 			end
-		else
-			warnWound:Show(args.destName, amount)
+		end
+	end
+	mod.SPELL_AURA_APPLIED_DOSE = mod.SPELL_AURA_APPLIED
+
+	function mod:SPELL_AURA_REMOVED(args)
+		--if args.spellId == 25646 then
+		if args.spellName == MortalWound then
+			timerWound:Stop(args.destName)
 		end
 	end
 end
-mod.SPELL_AURA_APPLIED_DOSE = mod.SPELL_AURA_APPLIED
 
-function mod:SPELL_AURA_REMOVED(args)
-	if args.spellId == 25646 then
-		timerWound:Stop(args.destName)
-	end
-end
-
-function mod:SPELL_SUMMON(args)
-	if args:IsSpellID(518, 25832, 25831) then
-		warnWorm:Show()
+do
+	local SummonWorm = DBM:GetSpellInfo(518)
+	function mod:SPELL_SUMMON(args)
+		--if args:IsSpellID(518, 25832, 25831) then
+		if args.spellName == SummonWorm then
+			warnWorm:Show()
+		end
 	end
 end

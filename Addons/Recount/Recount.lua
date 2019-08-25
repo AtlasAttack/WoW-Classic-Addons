@@ -11,8 +11,7 @@ local FilterSize	= 20
 local RampUp		= 5
 local RampDown		= 10
 
-Recount.Version = tonumber(string.sub("$Revision: 1478 $", 12, -3))
-
+Recount.Version = tonumber(string.sub("$Revision: 1480 $", 12, -3))
 
 local _G = _G
 local abs = abs
@@ -1814,8 +1813,8 @@ function Recount:OnEnable()
 	--Recount.events:RegisterEvent("PLAYER_PET_CHANGED")
 	Recount.events:RegisterEvent("ZONE_CHANGED_NEW_AREA") -- Elsia: This is needed for zone change deletion and collection
 	Recount.events:RegisterEvent("PLAYER_ENTERING_WORLD") -- Attempt to fix Onyxia instance entrance which isn't a new zone.
-	--Recount.events:RegisterEvent("PET_BATTLE_OPENING_START")
-	--Recount.events:RegisterEvent("PET_BATTLE_CLOSE")
+	Recount.events:RegisterEvent("PET_BATTLE_OPENING_START")
+	Recount.events:RegisterEvent("PET_BATTLE_CLOSE")
 	Recount:DetectInstanceChange() -- Elsia: We need to do this regardless for Zone filtering.
 	--if Recount.db.profile.DeleteJoinRaid or Recount.db.profile.DeleteJoinGroup then
 	Recount:ScheduleTimer("InitPartyBasedDeletion", 2) -- Elsia: Wait 2 seconds before enabling auto-delete to prevent startup popups.

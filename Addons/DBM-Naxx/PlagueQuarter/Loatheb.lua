@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Loatheb", "DBM-Naxx", 3)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190519032150")
+mod:SetRevision("20190817015300")
 mod:SetCreatureID(16011)
 mod:SetEncounterID(1115)
 mod:SetModelID(16110)
@@ -24,38 +24,42 @@ local timerDoom		= mod:NewNextTimer(180, 29204, nil, nil, nil, 2)
 --local timerAura		= mod:NewBuffActiveTimer(17, 55593, nil, nil, nil, 5, nil, DBM_CORE_HEALER_ICON)
 
 mod.vb.doomCounter	= 0
-mod.vb.sporeTimer	= 36
+mod.vb.sporeTimer	= 18
 
 function mod:OnCombatStart(delay)
 	self.vb.doomCounter = 0
-	if self:IsDifficulty("normal25") then
+	--if self:IsDifficulty("normal25") then
 		self.vb.sporeTimer = 18
-	else
-		self.vb.sporeTimer = 36
-	end
+	--else
+	--	self.vb.sporeTimer = 36
+	--end
 	timerSpore:Start(self.vb.sporeTimer - delay)
 	warnSporeSoon:Schedule(self.vb.sporeTimer - 5 - delay)
 	timerDoom:Start(120 - delay, self.vb.doomCounter + 1)
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args.spellId == 29234 then
-		timerSpore:Start(self.vb.sporeTimer)
-		warnSporeNow:Show()
-		warnSporeSoon:Schedule(self.vb.sporeTimer - 5)
-	elseif args:IsSpellID(29204) then
-		self.vb.doomCounter = self.vb.doomCounter + 1
-		local timer = 30
-		if self.vb.doomCounter >= 7 then
-			if self.vb.doomCounter % 2 == 0 then timer = 17
-			else timer = 12 end
+do
+	local Spore, InevitableDoom = DBM:GetSpellInfo(29234), DBM:GetSpellInfo(29204)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args.spellId == 29234 then
+		if args.spellName == Spore then
+			timerSpore:Start(self.vb.sporeTimer)
+			warnSporeNow:Show()
+			warnSporeSoon:Schedule(self.vb.sporeTimer - 5)
+		elseif args.spellName == InevitableDoom then
+			self.vb.doomCounter = self.vb.doomCounter + 1
+			local timer = 30
+			if self.vb.doomCounter >= 7 then
+				if self.vb.doomCounter % 2 == 0 then timer = 17
+				else timer = 12 end
+			end
+			warnDoomNow:Show(self.vb.doomCounter)
+			timerDoom:Start(timer, self.vb.doomCounter + 1)
+		--elseif args.spellId == 55593 then
+			--timerAura:Start()
+			--warnHealSoon:Schedule(14)
+			--warnHealNow:Schedule(17)
 		end
-		warnDoomNow:Show(self.vb.doomCounter)
-		timerDoom:Start(timer, self.vb.doomCounter + 1)
-	--elseif args.spellId == 55593 then
-		--timerAura:Start()
-		--warnHealSoon:Schedule(14)
-		--warnHealNow:Schedule(17)
 	end
 end
 

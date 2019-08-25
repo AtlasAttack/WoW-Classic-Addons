@@ -1439,11 +1439,11 @@ end
 
 local ZoneLabels = {
 	["none"] = L["Outside Instances"],
-	--["scenario"] = L["Scenario Instances"],
+	["scenario"] = L["Scenario Instances"],
 	["party"] = L["Party Instances"],
 	["raid"] = L["Raid Instances"],
-	["pvp"] = L["Battlegrounds"]--[[,
-	["arena"] = L["Arenas"]--]]
+	["pvp"] = L["Battlegrounds"],
+	["arena"] = L["Arenas"]
 }
 
 local GroupLabels = {
@@ -1454,11 +1454,11 @@ local GroupLabels = {
 
 local ZoneOrder = {
 	"none",
-	--"scenario",
+	"scenario",
 	"party",
 	"raid",
-	"pvp"--[[,
-	"arena"--]]
+	"pvp",
+	"arena"
 }
 
 function me:SetupMiscOptions(parent)

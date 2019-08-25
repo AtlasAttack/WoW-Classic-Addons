@@ -31,37 +31,52 @@ local timerHeal			= mod:NewCastTimer(4, 24208, nil, nil, nil, 4, nil, DBM_CORE_I
 local timerBlind		= mod:NewTargetTimer(10, 21060, nil, nil, nil, 3)
 local timerGouge		= mod:NewTargetTimer(4, 12540, nil, nil, nil, 3)
 
-function mod:SPELL_CAST_START(args)
-	if args:IsSpellID(24208) then
-		timerHeal:Start()
-		if self:CheckInterruptFilter(args.sourceGUID, false, true) then
-			specWarnHeal:Show(args.sourceName)
-			specWarnHeal:Play("kickcast")
+do
+	local GreatHeal = DBM:GetSpellInfo(24208)
+	function mod:SPELL_CAST_START(args)
+		--if args:IsSpellID(24208) then
+		if args.spellName == GreatHeal and args:IsSrcTypeHostile() then
+			timerHeal:Start()
+			if self:CheckInterruptFilter(args.sourceGUID, false, true) then
+				specWarnHeal:Show(args.sourceName)
+				specWarnHeal:Play("kickcast")
+			end
 		end
 	end
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args:IsSpellID(21060) then     --Blind Daze
-		warnBlind:Show(args.destName)
-		timerBlind:Start(args.destName)
-	elseif args:IsSpellID(12540) and self:IsInCombat() then --Gouge Stun
-		warnGouge:Show(args.destName)
-		timerGouge:Start(args.destName)
+do
+	local Blind, Gouge = DBM:GetSpellInfo(21060), DBM:GetSpellInfo(12540)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args:IsSpellID(21060) then     --Blind Daze
+		if args.spellName == Blind and args:IsDestTypePlayer() then
+			warnBlind:Show(args.destName)
+			timerBlind:Start(args.destName)
+		--elseif args:IsSpellID(12540) and args:IsDestTypePlayer() then --Gouge Stun
+		elseif args.spellName == Gouge and args:IsDestTypePlayer() then
+			warnGouge:Show(args.destName)
+			timerGouge:Start(args.destName)
+		end
+	end
+
+	function mod:SPELL_AURA_REMOVED(args)
+		--if args:IsSpellID(21060) then
+		if args.spellName == Blind and args:IsDestTypePlayer() then
+			timerBlind:Stop(args.destName)
+		--elseif args:IsSpellID(12540) then
+		elseif args.spellName == Gouge and args:IsDestTypePlayer() then
+			timerGouge:Stop(args.destName)
+		end
 	end
 end
 
-function mod:SPELL_AURA_REMOVED(args)
-	if args:IsSpellID(21060) then
-		timerBlind:Cancel(args.destName)
-    elseif args:IsSpellID(12540) then
-        timerGouge:Cancel(args.destName)
-	end
-end
-
-function mod:SPELL_SUMMON(args)
-	if args:IsSpellID(24813) then
-		warnAdds:Show()
+do
+	local SummonZulGardians = DBM:GetSpellInfo(24183)
+	function mod:SPELL_SUMMON(args)
+		--if args:IsSpellID(24183) then
+		if args.spellName == SummonZulGardians then
+			warnAdds:Show()
+		end
 	end
 end
 

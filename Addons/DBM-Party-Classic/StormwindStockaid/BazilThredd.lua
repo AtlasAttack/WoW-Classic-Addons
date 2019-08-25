@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("BazilThredd", "DBM-Party-Classic", 15)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190812041847")
+mod:SetRevision("20190815234726")
 mod:SetCreatureID(1716)
 
 mod:RegisterCombat("combat")
@@ -12,10 +12,10 @@ mod:RegisterEventsInCombat(
 
 local warningSmokeBomb			= mod:NewSpellAnnounce(7964, 2)
 
-local timerSmokeBombCD			= mod:NewAITimer(180, 7964, nil, nil, nil, 3)
+local timerSmokeBombCD			= mod:NewCDTimer(15.8, 7964, nil, nil, nil, 3)
 
 function mod:OnCombatStart(delay)
-	timerSmokeBombCD:Start(1-delay)
+	timerSmokeBombCD:Start(8-delay)
 end
 
 do

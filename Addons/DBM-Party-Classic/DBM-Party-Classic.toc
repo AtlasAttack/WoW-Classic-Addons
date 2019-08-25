@@ -27,6 +27,7 @@ localization.de.lua
 localization.kr.lua
 localization.tw.lua
 localization.es.lua
+localization.cn.lua
 
 BlackfathomDeeps\GhamooRa.lua
 BlackfathomDeeps\LadySerevess.lua
@@ -150,6 +151,28 @@ StormwindStockaid\Hamhock.lua
 StormwindStockaid\BazilThredd.lua
 StormwindStockaid\DextrenWard.lua
 StormwindStockaid\BruegalIronknuckle.lua
+
+Stratholme\HearthsingerForresten.lua
+Stratholme\TimmytheCruel.lua
+Stratholme\CommanderMalor.lua
+Stratholme\WilleyHopebreaker.lua
+Stratholme\InstructorGalford.lua
+Stratholme\Balnazzar.lua
+Stratholme\TheUnforgiven.lua
+Stratholme\BaronessAnastari.lua
+Stratholme\Narubenkan.lua
+Stratholme\MalekithePallid.lua
+Stratholme\MagistrateBarthilas.lua
+Stratholme\RamsteintheGorger.lua
+Stratholme\LordAuriusRivendare.lua
+
+SunkenTemple\AvatarofHakkar.lua
+SunkenTemple\JammalantheProphet.lua
+SunkenTemple\Dreamscythe.lua
+SunkenTemple\Weaver.lua
+SunkenTemple\Morphaz.lua
+SunkenTemple\Hazzas.lua
+SunkenTemple\ShadeofEranikus.lua
 
 Uldaman\Revelosh.lua
 Uldaman\TheLostDwarves.lua

@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Gothik", "DBM-Naxx", 4)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516165503")
+mod:SetRevision("20190817015300")
 mod:SetCreatureID(16060)
 mod:SetEncounterID(1109)
 mod:SetModelID(16279)
@@ -11,6 +11,7 @@ mod:RegisterEventsInCombat(
 	"UNIT_DIED"
 )
 
+--TODO, actual naxx 40 waves, right now 25 man are used
 local warnWaveNow		= mod:NewAnnounce("WarningWaveSpawned", 3, nil, false)
 local warnWaveSoon		= mod:NewAnnounce("WarningWaveSoon", 2)
 local warnRiderDown		= mod:NewAnnounce("WarningRiderDown", 4)
@@ -90,11 +91,11 @@ function mod:NextWave()
 end
 
 function mod:OnCombatStart(delay)
-	if self:IsDifficulty("normal25") then
+	--if self:IsDifficulty("normal25") then
 		waves = wavesHeroic
-	else
-		waves = wavesNormal
-	end
+	--else
+		--waves = wavesNormal
+	--end
 	self.vb.wave = 0
 	timerPhase2:Start()
 	warnPhase2:Schedule(270)
@@ -104,11 +105,11 @@ function mod:OnCombatStart(delay)
 end
 
 function mod:OnTimerRecovery()
-	if self:IsDifficulty("normal25") then
+	--if self:IsDifficulty("normal25") then
 		waves = wavesHeroic
-	else
-		waves = wavesNormal
-	end
+	--else
+	--	waves = wavesNormal
+	--end
 end
 
 function mod:UNIT_DIED(args)

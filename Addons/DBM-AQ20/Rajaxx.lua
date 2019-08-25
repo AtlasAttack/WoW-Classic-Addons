@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Rajaxx", "DBM-AQ20", 1)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190518070653")
+mod:SetRevision("20190819220021")
 mod:SetCreatureID(15341)
 mod:SetEncounterID(719)
 mod:SetModelID(15376)
@@ -13,7 +13,7 @@ mod:RegisterEvents(--An exception to not use incombat events, cause boss might n
 	"CHAT_MSG_MONSTER_YELL"
 )
 
-local warnWave			= mod:NewAnnounce("WarnWave", 2, "Interface\\Icons\\Spell_Nature_WispSplode")
+local warnWave			= mod:NewAnnounce("WarnWave", 2, "136116")
 local warnOrder			= mod:NewTargetNoFilterAnnounce(25471)
 local warnCloud			= mod:NewSpellAnnounce(26550)
 local warnThundercrash	= mod:NewSpellAnnounce(25599)
@@ -24,25 +24,34 @@ local yellOrder			= mod:NewYell(25471)
 local timerOrder		= mod:NewTargetTimer(10, 25471, nil, nil, nil, 3)
 local timerCloud		= mod:NewBuffActiveTimer(15, 26550, nil, nil, nil, 3)--? Good color?
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args.spellId == 25471 then
-		timerOrder:Start(args.destName)
-		if args:IsPlayer() then
-			specWarnOrder:Show()
-			specWarnOrder:Play("targetyou")
-			yellOrder:Yell()
-		else
-			warnOrder:Show(args.destName)
+do
+	local AttackOrder = DBM:GetSpellInfo(25471)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args.spellId == 25471 then
+		if args.spellName == AttackOrder then
+			timerOrder:Start(args.destName)
+			if args:IsPlayer() then
+				specWarnOrder:Show()
+				specWarnOrder:Play("targetyou")
+				yellOrder:Yell()
+			else
+				warnOrder:Show(args.destName)
+			end
 		end
 	end
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args.spellId == 26550 then
-		warnCloud:Show()
-		timerCloud:Start()
-	elseif args.spellId == 25599 then
-		warnThundercrash:Show()
+do
+	local LightningCloud, Thundercrash = DBM:GetSpellInfo(26550), DBM:GetSpellInfo(25599)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args.spellId == 26550 then
+		if args.spellName == LightningCloud then
+			warnCloud:Show()
+			timerCloud:Start()
+		--elseif args.spellId == 25599 then
+		elseif args.spellName == Thundercrash then
+			warnThundercrash:Show()
+		end
 	end
 end
 

@@ -22,6 +22,7 @@
 localization.en.lua
 localization.de.lua
 localization.tw.lua
+localization.cn.lua
 KazzakClassic.lua
 Azuregos.lua
 Taerar.lua

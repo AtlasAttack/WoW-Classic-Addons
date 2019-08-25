@@ -14,6 +14,7 @@
 localization.en.lua
 localization.es.lua
 localization.ru.lua
+localization.cn.lua
 Venoxis.lua
 Jeklik.lua
 Marli.lua

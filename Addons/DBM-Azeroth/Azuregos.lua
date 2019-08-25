@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Azuregos", "DBM-Azeroth")
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190519034518")
+mod:SetRevision("20190815234726")
 mod:SetCreatureID(6109)--121820 TW ID, 6109 classic ID
 --mod:SetModelID(17887)
 mod:SetZone()
@@ -13,7 +13,6 @@ mod:RegisterEventsInCombat(
 --	"SPELL_CAST_SUCCESS"
 )
 
---TODO, maybe add yells for classic version, for timewalking version, it just doens't matter if marks don't run out
 --TODO, needs valid spellIds for Classic
 --local warningFrostBreath		= mod:NewSpellAnnounce(243789, 3)
 
@@ -34,14 +33,18 @@ function mod:OnCombatStart(delay, yellTriggered)
 	end
 end
 
-function mod:SPELL_CAST_START(args)
-	if args.spellId == 21147  and self:AntiSpam(5, 1) then
-		specWarnArcaneVacuum:Show()
-		specWarnArcaneVacuum:Play("teleyou")
-		--timerArcaneVacuumCD:Start()
-	elseif args.spellId == 243789 and self:AntiSpam(3, 2) then
-		--warningFrostBreath:Show()
-		--timerFrostBreathCD:Start()
+do
+	local ArcaneVacuum = DBM:GetSpellInfo(21147)
+	function mod:SPELL_CAST_START(args)
+		--if args.spellId == 21147  and self:AntiSpam(5, 1) then
+		if args.spellName == ArcaneVacuum  and self:AntiSpam(5, 1) then
+			specWarnArcaneVacuum:Show()
+			specWarnArcaneVacuum:Play("teleyou")
+			--timerArcaneVacuumCD:Start()
+		--elseif args.spellId == 243789 and self:AntiSpam(3, 2) then
+			--warningFrostBreath:Show()
+			--timerFrostBreathCD:Start()
+		end
 	end
 end
 

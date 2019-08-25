@@ -25,44 +25,60 @@ local specWarnDelusion		= mod:NewSpecialWarningYou(24306, nil, nil, nil, 1, 2)--
 local timerHex				= mod:NewTargetTimer(5, 17172, nil, "RemoveMagic|Healer", nil, 5, nil, DBM_CORE_MAGIC_ICON)
 local timerDelusion			= mod:NewTargetTimer(20, 24306, nil, "RemoveCurse", nil, 5, nil, DBM_CORE_CURSE_ICON)
 
-function mod:OnCombatStart(delay)
-end
+--function mod:OnCombatStart(delay)
+--end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args:IsSpellID(24306) then
-		timerDelusion:Start(args.destName)
-		if args:IsPlayer() then
-			specWarnDelusion:Show()
-			specWarnDelusion:Play("targetyou")
-		else
-			warnDelusion:Show(args.destName)
+do
+	local DelusionsofJindo, Hex, BrainWash = DBM:GetSpellInfo(24306), DBM:GetSpellInfo(17172), DBM:GetSpellInfo(24261)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args:IsSpellID(24306) then
+		if args.spellName == DelusionsofJindo then
+			timerDelusion:Start(args.destName)
+			if args:IsPlayer() then
+				specWarnDelusion:Show()
+				specWarnDelusion:Play("targetyou")
+			else
+				warnDelusion:Show(args.destName)
+			end
+		--elseif args:IsSpellID(17172) then
+		elseif args.spellName == Hex and args:IsDestTypePlayer() then
+			timerHex:Start(args.destName)
+			warnHex:Show(args.destName)
+		--elseif args:IsSpellID(24261) then
+		elseif args.spellName == BrainWash then
+			warnBrainWash:Show(args.destName)
 		end
-	elseif args:IsSpellID(17172) then
-		timerHex:Start(args.destName)
-		warnHex:Show(args.destName)
-	elseif args:IsSpellID(24261) then
-		warnBrainWash:Show(args.destName)
+	end
+
+	function mod:SPELL_AURA_REMOVED(args)
+		--if args:IsSpellID(17172) then
+		if args.spellName == Hex and args:IsDestTypePlayer() then
+			timerHex:Stop(args.destName)
+		end
 	end
 end
 
-function mod:SPELL_AURA_REMOVED(args)
-	if args:IsSpellID(17172) then
-		timerHex:Stop(args.destName)
+do
+	local Banish = DBM:GetSpellInfo(24466)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args:IsSpellID(24466) then
+		if args.spellName == Banish and args:IsSrcTypeHostile() then
+			warnBanish:Show(args.destName)
+		end
 	end
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args:IsSpellID(24466) then
-		warnBanish:Show(args.destName)
-	end
-end
-
-function mod:SPELL_SUMMON(args)
-	if args:IsSpellID(24309) then
-		specWarnHealingWard:Show()
-		specWarnHealingWard:Play("attacktotem")
-	elseif args:IsSpellID(24262) then
-		specWarnBrainTotem:Show()
-		specWarnBrainTotem:Play("attacktotem")
+do
+	local HealingWard, BrainTotem = DBM:GetSpellInfo(24309), DBM:GetSpellInfo(24262)
+	function mod:SPELL_SUMMON(args)
+		--if args:IsSpellID(24309) then
+		if args.spellName == HealingWard and args:IsDestTypeHostile() then
+			specWarnHealingWard:Show()
+			specWarnHealingWard:Play("attacktotem")
+		--elseif args:IsSpellID(24262) then
+		elseif args.spellName == BrainTotem then
+			specWarnBrainTotem:Show()
+			specWarnBrainTotem:Play("attacktotem")
+		end
 	end
 end

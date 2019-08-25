@@ -13,6 +13,8 @@ mod:RegisterEventsInCombat(
 	"SPELL_AURA_REMOVED 23952"
 )
 
+--TODO, why is screech called screech when spellID is for psychic scream, is it wrong spellId/name?
+--TODO, sonic Burst should probably be a target announce
 local warnSonicBurst	= mod:NewSpellAnnounce(23918, 3)
 local warnScreech		= mod:NewSpellAnnounce(22884, 3)
 local warnPain			= mod:NewTargetNoFilterAnnounce(23952, 2, nil, "RemoveMagic|Healer")
@@ -28,36 +30,50 @@ local timerHealCD		= mod:NewNextTimer(20, 23954, nil, nil, nil, 4, nil, DBM_CORE
 function mod:OnCombatStart(delay)
 end
 
-function mod:SPELL_CAST_START(args)
-	if args:IsSpellID(23954) then
-		timerHealCD:Start()
-		timerHeal:Start()
-		if self:CheckInterruptFilter(args.sourceGUID, false, true) then
-			specWarnHeal:Show(args.sourceName)
-			specWarnHeal:Play("kickcast")
+do
+	local GreatHeal = DBM:GetSpellInfo(23954)
+	function mod:SPELL_CAST_START(args)
+		--if args:IsSpellID(23954) then
+		if args.spellName == GreatHeal and args:IsSrcTypeHostile() then
+			timerHealCD:Start()
+			timerHeal:Start()
+			if self:CheckInterruptFilter(args.sourceGUID, false, true) then
+				specWarnHeal:Show(args.sourceName)
+				specWarnHeal:Play("kickcast")
+			end
 		end
 	end
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args:IsSpellID(23918) then
-		timerSonicBurst:Start()
-		warnSonicBurst:Show()
-	elseif args:IsSpellID(22884) then
-		timerScreech:Start()
-		warnScreech:Show()
+do
+	local SonicBurst, PsychicScream = DBM:GetSpellInfo(23918), DBM:GetSpellInfo(22884)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args:IsSpellID(23918) then
+		if args.spellName == SonicBurst then
+			timerSonicBurst:Start()
+			warnSonicBurst:Show()
+		--elseif args:IsSpellID(22884) then
+		elseif args.spellName == PsychicScream and args:IsSrcTypeHostile() then
+			timerScreech:Start()
+			warnScreech:Show()
+		end
 	end
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args:IsSpellID(23952) then
-		timerPain:Start(args.destName)
-		warnPain:Show(args.destName)
+do
+	local ShadowWordPain = DBM:GetSpellInfo(23952)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args:IsSpellID(23952) then
+		if args.spellName == ShadowWordPain and args:IsDestTypePlayer() then
+			timerPain:Start(args.destName)
+			warnPain:Show(args.destName)
+		end
 	end
-end
 
-function mod:SPELL_AURA_REMOVED(args)
-	if args:IsSpellID(23952) then
-		timerPain:Stop(args.destName)
+	function mod:SPELL_AURA_REMOVED(args)
+		--if args:IsSpellID(23952) then
+		if args.spellName == ShadowWordPain and args:IsDestTypePlayer() then
+			timerPain:Stop(args.destName)
+		end
 	end
 end

@@ -2,7 +2,7 @@
 local mod	= DBM:NewMod("Thaddius", "DBM-Naxx", 2)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516161142")
+mod:SetRevision("20190817015300")
 mod:SetCreatureID(15928)
 mod:SetEncounterID(1120)
 mod:SetModelID(16137)
@@ -46,14 +46,18 @@ function mod:OnCombatStart(delay)
 end
 
 local lastShift = 0
-function mod:SPELL_CAST_START(args)
-	if args.spellId == 28089 then
-		self.vb.phase = 2
-		timerNextShift:Start()
-		timerShiftCast:Start()
-		warnShiftCasting:Show()
-		warnShiftSoon:Schedule(25)
-		lastShift = GetTime()
+do
+	local PolarityShift = DBM:GetSpellInfo(28089)
+	function mod:SPELL_CAST_START(args)
+		--if args.spellId == 28089 then
+		if args.spellName == PolarityShift then
+			self.vb.phase = 2
+			timerNextShift:Start()
+			timerShiftCast:Start()
+			warnShiftCasting:Show()
+			warnShiftSoon:Schedule(25)
+			lastShift = GetTime()
+		end
 	end
 end
 
@@ -63,10 +67,10 @@ function mod:UNIT_AURA()
 	local i = 1
 	while DBM:UnitDebuff("player", i) do
 		local _, icon, count = DBM:UnitDebuff("player", i)
-		if icon == "Interface\\Icons\\Spell_ChargeNegative" then
+		if icon == "Interface\\Icons\\Spell_ChargeNegative" or icon == 135768 then--Not sure if classic will return data ID or path, so include both
 			if count > 1 then return end
 			charge = L.Charge1
-		elseif icon == "Interface\\Icons\\Spell_ChargePositive" then
+		elseif icon == "Interface\\Icons\\Spell_ChargePositive" or icon == 135769 then--Not sure if classic will return data ID or path, so include both
 			if count > 1 then return end
 			charge = L.Charge2
 		end

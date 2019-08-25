@@ -21,22 +21,28 @@ local timerPain		= mod:NewTargetTimer(18, 24212, nil, "RemoveMagic|Healer", nil,
 function mod:OnCombatStart(delay)
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args:IsSpellID(24210) then
-		if args:IsPlayer() then
-			specWarnMark:Show()
-			specWarnMark:Play("targetyou")
-		else
-			warnMark:Show(args.destName)
+do
+	local MarkofArlokk, ShadowwordPain = DBM:GetSpellInfo(24210), DBM:GetSpellInfo(24212)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args:IsSpellID(24210) then
+		if args.spellName == MarkofArlokk then
+			if args:IsPlayer() then
+				specWarnMark:Show()
+				specWarnMark:Play("targetyou")
+			else
+				warnMark:Show(args.destName)
+			end
+		--elseif args:IsSpellID(24212) then
+		elseif args.spellName == ShadowwordPain and args:IsDestTypePlayer() then
+			warnPain:Show(args.destName)
+			timerPain:Start(args.destName)
 		end
-	elseif args:IsSpellID(24212) then
-		warnPain:Show(args.destName)
-		timerPain:Start(args.destName)
 	end
-end
 
-function mod:SPELL_AURA_REMOVED(args)
-	if args:IsSpellID(24212) then
-		timerPain:Stop(args.destName)
+	function mod:SPELL_AURA_REMOVED(args)
+		--if args:IsSpellID(24212) then
+		if args.spellName == ShadowwordPain and args:IsDestTypePlayer() then
+			timerPain:Stop(args.destName)
+		end
 	end
 end

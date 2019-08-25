@@ -178,17 +178,6 @@ L:SetGeneralLocalization({
 	name = "그라불루스"
 })
 
-L:SetOptionLocalization({
-	SpecialWarningInjection		= "돌연변이 유발에 걸리면 특수 경고 보기"
-})
-
-L:SetWarningLocalization({
-	SpecialWarningInjection		= "당신에게 돌연변이 유발"
-})
-
-L:SetTimerLocalization({
-})
-
 -------------
 --  글루스  --
 -------------
@@ -378,8 +367,7 @@ L:SetGeneralLocalization({
 L:SetOptionLocalization({
 	TimerPhase2			= "2단계 타이머 바 보기",
 	specwarnP2Soon		= "켈투자드 전투 개시 10초 전에 특수 경고 보기",
-	warnAddsSoon		= "얼음왕관의 수호자 사전 경고 보기",
-	ShowRange			= "2단계 시작시 거리 창 보기"
+	warnAddsSoon		= "얼음왕관의 수호자 사전 경고 보기"
 })
 
 L:SetMiscLocalization({

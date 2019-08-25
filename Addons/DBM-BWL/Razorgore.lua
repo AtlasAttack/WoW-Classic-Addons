@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Razorgore", "DBM-BWL", 1)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516161007")
+mod:SetRevision("20190819025921")
 mod:SetCreatureID(12435, 99999)--Bogus detection to prevent invalid kill detection if razorgore happens to die in phase 1
 mod:SetEncounterID(610)--BOSS_KILL is valid, but ENCOUNTER_END is not
 mod:DisableEEKillDetection()--So disable only EE
@@ -18,7 +18,7 @@ mod:RegisterEventsInCombat(
 )
 
 local warnPhase2			= mod:NewPhaseAnnounce(2)
-local warnConflagration		= mod:NewTargetAnnounce(23023, 2)
+local warnConflagration		= mod:NewTargetNoFilterAnnounce(23023, 2)
 
 local timerConflagration	= mod:NewTargetTimer(10, 23023, nil, nil, nil, 3)
 local timerAddsSpawn		= mod:NewTimer(47, "TimerAddsSpawn", 19879, nil, nil, 1)--Only for start of adds, not adds after the adds.
@@ -30,16 +30,21 @@ function mod:OnCombatStart(delay)
 	self.vb.phase = 1
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args.spellId == 23023 and args:IsDestTypePlayer() then
-		warnConflagration:Show(args.destName)
-		timerConflagration:Start(args.destName)
+do
+	local Conflagration = DBM:GetSpellInfo(23023)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args.spellId == 23023 and args:IsDestTypePlayer() then
+		if args.spellName == Conflagration and args:IsDestTypePlayer() then
+			warnConflagration:Show(args.destName)
+			timerConflagration:Start(args.destName)
+		end
 	end
-end
 
-function mod:SPELL_AURA_REMOVED(args)
-	if args.spellId == 23023 then
-		timerConflagration:Stop(args.destName)
+	function mod:SPELL_AURA_REMOVED(args)
+		--if args.spellId == 23023 then
+		if args.spellName == Conflagration and args:IsDestTypePlayer() then
+			timerConflagration:Stop(args.destName)
+		end
 	end
 end
 

@@ -293,11 +293,11 @@ end
 Recount:AddModeTooltip(L["Mana Gained"], DataModes.ManaGained, TooltipFuncs.ManaGained)
 Recount:AddModeTooltip(L["Energy Gained"], DataModes.EnergyGained, TooltipFuncs.EnergyGained)
 Recount:AddModeTooltip(L["Rage Gained"], DataModes.RageGained, TooltipFuncs.RageGained)
---[[Recount:AddModeTooltip(L["Runic Power Gained"], DataModes.RunicPowerGained, TooltipFuncs.RunicPowerGained)
+Recount:AddModeTooltip(L["Runic Power Gained"], DataModes.RunicPowerGained, TooltipFuncs.RunicPowerGained)
 Recount:AddModeTooltip(L["Astral Power Gained"], DataModes.AstralPowerGained, TooltipFuncs.AstralPowerGained)
 Recount:AddModeTooltip(L["Maelstorm Gained"], DataModes.MaelstormGained, TooltipFuncs.MaelstormGained)
 Recount:AddModeTooltip(L["Fury Gained"], DataModes.FuryGained, TooltipFuncs.FuryGained)
-Recount:AddModeTooltip(L["Pain Gained"], DataModes.PainGained, TooltipFuncs.PainGained)--]]
+Recount:AddModeTooltip(L["Pain Gained"], DataModes.PainGained, TooltipFuncs.PainGained)
 
 local oldlocalizer = Recount.LocalizeCombatants
 function Recount.LocalizeCombatants()

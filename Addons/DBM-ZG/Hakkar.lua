@@ -7,8 +7,8 @@ mod:SetEncounterID(793)
 mod:RegisterCombat("combat")
 
 mod:RegisterEventsInCombat(
-	"SPELL_AURA_APPLIED 24327 24328",
-	"SPELL_CAST_SUCCESS 24324"
+	"SPELL_CAST_SUCCESS 24324",
+	"SPELL_AURA_APPLIED 24327 24328"
 )
 
 local warnSiphonSoon	= mod:NewSoonAnnounce(24324)
@@ -29,25 +29,34 @@ function mod:OnCombatStart(delay)
 	timerSiphon:Start(-delay)
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args:IsSpellID(24327) then
-		warnInsanity:Show(args.destName)
-		timerInsanity:Start(args.destName)
-		timerInsanityCD:Start()
-	elseif args:IsSpellID(24328) then
-		if args:IsPlayer() then
-			specWarnBlood:Show()
-			specWarnBlood:Play("runout")
-		else
-			warnBlood:Show(args.destName)
+do
+	local BloodSiphon = DBM:GetSpellInfo(24324)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args:IsSpellID(24324) then
+		if args.spellName == BloodSiphon then
+			warnSiphonSoon:Cancel()
+			warnSiphonSoon:Schedule(80)
+			timerSiphon:Start()
 		end
 	end
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args:IsSpellID(24324) then
-		warnSiphonSoon:Cancel()
-		warnSiphonSoon:Schedule(80)
-		timerSiphon:Start()
+do
+	local CauseInsanity, CorruptedBlood = DBM:GetSpellInfo(24327), DBM:GetSpellInfo(24328)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args:IsSpellID(24327) then
+		if args.spellName == CauseInsanity then
+			warnInsanity:Show(args.destName)
+			timerInsanity:Start(args.destName)
+			timerInsanityCD:Start()
+		--elseif args:IsSpellID(24328) then
+		elseif args.spellName == CorruptedBlood then
+			if args:IsPlayer() then
+				specWarnBlood:Show()
+				specWarnBlood:Play("runout")
+			else
+				warnBlood:Show(args.destName)
+			end
+		end
 	end
 end

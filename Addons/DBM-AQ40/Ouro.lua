@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Ouro", "DBM-AQ40", 1)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516161007")
+mod:SetRevision("20190819212906")
 mod:SetCreatureID(15517)
 mod:SetEncounterID(716)
 mod:SetModelID(15509)
@@ -17,8 +17,8 @@ mod:RegisterEventsInCombat(
 local warnSubmerge		= mod:NewAnnounce("WarnSubmerge", 3, "Interface\\AddOns\\DBM-Core\\textures\\CryptFiendBurrow.blp")
 local warnEmerge		= mod:NewAnnounce("WarnEmerge", 3, "Interface\\AddOns\\DBM-Core\\textures\\CryptFiendUnBurrow.blp")
 local warnSweep			= mod:NewSpellAnnounce(26103, 2, nil, "Tank", 2)
-local warnEnrage		= mod:NewSpellAnnounce(26615, 3)
-local warnEnrageSoon	= mod:NewSoonAnnounce(26615, 2)
+local warnBerserk		= mod:NewSpellAnnounce(26615, 3)
+local warnBerserkSoon	= mod:NewSoonAnnounce(26615, 2)
 
 local specWarnBlast		= mod:NewSpecialWarningSpell(26102, nil, nil, nil, 2, 2)
 
@@ -27,49 +27,62 @@ local timerEmerge		= mod:NewTimer(30, "TimerEmerge", "Interface\\AddOns\\DBM-Cor
 local timerSweepCD		= mod:NewNextTimer(20.5, 26103, nil, "Tank", 2, 5, nil, DBM_CORE_TANK_ICON)
 local timerBlastCD		= mod:NewNextTimer(23, 26102, nil, nil, nil, 2)
 
-mod.vb.prewarn_enrage = false
-mod.vb.enraged = false
+mod.vb.prewarn_Berserk = false
+mod.vb.Berserked = false
 
 function mod:OnCombatStart(delay)
-	self.vb.prewarn_enrage = false
-	self.vb.enraged = false
+	self.vb.prewarn_Berserk = false
+	self.vb.Berserked = false
 end
 
 function mod:Emerge()
 	warnEmerge:Show()
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args.spellId == 26615 then
-		self.vb.enraged = true
-		warnEnrage:Show()
+do
+	local Berserk = DBM:GetSpellInfo(26615)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args.spellId == 26615 then
+		if args.spellName == Berserk and args:IsDestTypeHostile() then
+			self.vb.Berserked = true
+			warnBerserk:Show()
+		end
 	end
 end
 
-function mod:SPELL_CAST_START(args)
-	if args.spellId == 26102 then
-		specWarnBlast:Show()
-		specWarnBlast:Play("stunsoon")
-		timerBlastCD:Start()
-	elseif args.spellId == 26103 then
-		warnSweep:Show()
-		timerSweepCD:Start()
+do
+	local SandBlast, Sweep = DBM:GetSpellInfo(26102), DBM:GetSpellInfo(26103)
+	function mod:SPELL_CAST_START(args)
+		--if args.spellId == 26102 then
+		if args.spellName == SandBlast then
+			specWarnBlast:Show()
+			specWarnBlast:Play("stunsoon")
+			timerBlastCD:Start()
+		--elseif args.spellId == 26103 then
+		elseif args.spellName == Sweep and args:IsSrcTypeHostile() then
+			warnSweep:Show()
+			timerSweepCD:Start()
+		end
 	end
 end
 
-function mod:SPELL_SUMMON(args)
-	if args.spellId == 26058 and self:AntiSpam(3) and not self.vb.enraged then
-		timerBlastCD:Stop()
-		timerSweepCD:Stop()
-		warnSubmerge:Show()
-		timerEmerge:Start()
-		self:ScheduleMethod(30, "Emerge")
+do
+	local SummonOuroMounds = DBM:GetSpellInfo(26058)
+	function mod:SPELL_SUMMON(args)
+		--if args.spellId == 26058 and self:AntiSpam(3) and not self.vb.Berserked then
+		if args.spellName == SummonOuroMounds and self:AntiSpam(3) and not self.vb.Berserked then
+			timerBlastCD:Stop()
+			timerSweepCD:Stop()
+			warnSubmerge:Show()
+			timerEmerge:Start()
+			self:ScheduleMethod(30, "Emerge")
+		end
 	end
 end
 
 function mod:UNIT_HEALTH(uId)
-	if UnitHealth(uId) / UnitHealthMax(uId) <= 0.23 and self:GetUnitCreatureId(uId) == 15517 and not self.vb.prewarn_enrage then
-		self.vb.prewarn_enrage = true
-		warnEnrageSoon:Show()
+	if UnitHealth(uId) / UnitHealthMax(uId) <= 0.23 and self:GetUnitCreatureId(uId) == 15517 and not self.vb.prewarn_Berserk then
+		self.vb.prewarn_Berserk = true
+		warnBerserkSoon:Show()
 	end
 end

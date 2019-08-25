@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Gluth", "DBM-Naxx", 2)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516165503")
+mod:SetRevision("20190817015300")
 mod:SetCreatureID(15932)
 mod:SetEncounterID(1108)
 mod:SetModelID(16064)
@@ -24,11 +24,15 @@ function mod:OnCombatStart(delay)
 	warnDecimateSoon:Schedule(100 - delay)
 end
 
-function mod:SPELL_DAMAGE(_, _, _, _, _, _, _, _, spellId)
-	if spellId == 28375 and self:AntiSpam(20) then
-		warnDecimateNow:Show()
-		timerDecimate:Start()
-		warnDecimateSoon:Schedule(96)
+do
+	local Decimate = DBM:GetSpellInfo(28375)
+	function mod:SPELL_DAMAGE(_, _, _, _, _, _, _, _, spellId, spellName)
+		--if spellId == 28375 and self:AntiSpam(20) then
+		if spellName == Decimate and self:AntiSpam(20) then
+			warnDecimateNow:Show()
+			timerDecimate:Start()
+			warnDecimateSoon:Schedule(96)
+		end
 	end
 end
 

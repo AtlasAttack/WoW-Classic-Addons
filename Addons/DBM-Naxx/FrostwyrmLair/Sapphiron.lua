@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Sapphiron", "DBM-Naxx", 5)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516161142")
+mod:SetRevision("20190817015300")
 mod:SetCreatureID(15989)
 mod:SetEncounterID(1119)
 mod:SetModelID(16033)
@@ -38,7 +38,7 @@ local function resetIsFlying(self)
 	self.vb.isFlying = false
 end
 
-function mod:Landing()
+local function Landing()
 	warnAirPhaseSoon:Schedule(56)
 	warnLanded:Show()
 	timerAirPhase:Start()
@@ -78,20 +78,28 @@ function mod:OnCombatStart(delay)
 	end, 0.2)
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args.spellId == 28522 then
-		warnIceBlock:CombinedShow(0.5, args.destName)
-		if args:IsPlayer() then
-			yellIceBlock:Yell()
+do
+	local IceBolt = DBM:GetSpellInfo(28522)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args.spellId == 28522 then
+		if args.spellName == IceBolt and args:IsDestTypePlayer() then
+			warnIceBlock:CombinedShow(0.5, args.destName)
+			if args:IsPlayer() then
+				yellIceBlock:Yell()
+			end
 		end
 	end
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args:IsSpellID(28542, 55665) then -- Life Drain
-		warnDrainLifeNow:Show()
-		warnDrainLifeSoon:Schedule(18.5)
-		timerDrainLife:Start()
+do
+	local LifeDrain = DBM:GetSpellInfo(28542)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args:IsSpellID(28542, 55665) then -- Life Drain
+		if args.spellName == LifeDrain and args:IsSrcTypeHostile() then -- Life Drain
+			warnDrainLifeNow:Show()
+			warnDrainLifeSoon:Schedule(18.5)
+			timerDrainLife:Start()
+		end
 	end
 end
 
@@ -105,7 +113,7 @@ function mod:OnSync(event)
 	if event == "DeepBreath" then
 		timerIceBlast:Start()
 		timerLanding:Update(14)
-		self:ScheduleMethod(14.5, "Landing")
+		self:Schedule(14.5, Landing, self)
 		warnDeepBreath:Show()
 		warnDeepBreath:Play("findshelter")
 	end

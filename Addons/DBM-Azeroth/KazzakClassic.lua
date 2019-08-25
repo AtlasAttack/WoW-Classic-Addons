@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("KazzakClassic", "DBM-Azeroth")
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190520044609")
+mod:SetRevision("20190815234726")
 mod:SetCreatureID(12397)--121818 TW ID, 12397 classic ID
 --mod:SetModelID(17887)
 mod:SetZone()
@@ -21,14 +21,13 @@ mod:RegisterEventsInCombat(
 local warningMark				= mod:NewTargetAnnounce(21056, 4)
 --local warningShadowBoltVolley	= mod:NewSpellAnnounce(243712, 2)
 
-local specWarnMark				= mod:NewSpecialWarningMoveAway(21056, nil, nil, nil, 1, 2)
+local specWarnMark				= mod:NewSpecialWarningYou(21056, nil, nil, nil, 1, 2)
 
 --local timerVoidBoltCD			= mod:NewCDTimer(27.8, 243713, nil, "Tank", nil, 5, nil, DBM_CORE_TANK_ICON)--Iffy
 local timerMarkCD				= mod:NewCDTimer(19.1, 21056, nil, nil, nil, 3, nil, DBM_CORE_MAGIC_ICON)
 --local timerShadowBoltVolleyCD	= mod:NewCDTimer(7.6, 243712, nil, nil, nil, 2)
 
 --mod:AddReadyCheckOption(48620, false)
-
 
 function mod:OnCombatStart(delay, yellTriggered)
 	if yellTriggered then
@@ -47,20 +46,25 @@ function mod:SPELL_CAST_START(args)
 end
 --]]
 
-function mod:SPELL_AURA_APPLIED(args)
-	local spellId = args.spellId
-	if spellId == 243713 then
-	--	local amount = args.amount or 1
-	--	warnVoidBolt:Show(args.destName, amount)
-	--	timerVoidBoltCD:Start()
-	--elseif spellId == 156598 then
-	--	warningFrenzy:Show()
-	elseif spellId == 21056 then
-		warningMark:CombinedShow(0.5, args.destName)
-		timerMarkCD:DelayedStart(0.5)
-		if args:IsPlayer() then
-			specWarnMark:Show()
-			specWarnMark:Play("runout")
+do
+	local MarkofKaz = DBM:GetSpellInfo(21056)
+	function mod:SPELL_AURA_APPLIED(args)
+		--local spellId = args.spellId
+		local spellName = args.spellName
+		--if spellId == 21056 then
+		if spellName == MarkofKaz then
+			warningMark:CombinedShow(0.5, args.destName)
+			timerMarkCD:DelayedStart(0.5)
+			if args:IsPlayer() then
+				specWarnMark:Show()
+				specWarnMark:Play("targetyou")
+			end
+		--elseif spellId == 243713 then
+		--	local amount = args.amount or 1
+		--	warnVoidBolt:Show(args.destName, amount)
+		--	timerVoidBoltCD:Start()
+		--elseif spellId == 156598 then
+		--	warningFrenzy:Show()
 		end
 	end
 end

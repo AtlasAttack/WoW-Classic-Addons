@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Flamegor", "DBM-BWL", 1)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516161007")
+mod:SetRevision("20190819025921")
 mod:SetCreatureID(11981)
 mod:SetEncounterID(615)
 mod:SetModelID(6377)
@@ -14,27 +14,36 @@ mod:RegisterEventsInCombat(
 
 local warnWingBuffet	= mod:NewCastAnnounce(23339, 2)
 local warnShadowFlame	= mod:NewCastAnnounce(22539, 2)
-local warnEnrage		= mod:NewSpellAnnounce(23342, 3, nil, "Tank", 2)
+local warnFrenzy		= mod:NewSpellAnnounce(23342, 3, nil, "Tank", 2)
 
 local timerWingBuffet	= mod:NewNextTimer(31, 23339, nil, nil, nil, 2)
-local timerEnrageNext 	= mod:NewNextTimer(10, 23342, nil, "Tank", 2, 5, nil, DBM_CORE_TANK_ICON)
+local timerFrenzyNext 	= mod:NewNextTimer(10, 23342, nil, "Tank", 2, 5, nil, DBM_CORE_TANK_ICON)
 
 function mod:OnCombatStart(delay)
 	timerWingBuffet:Start(-delay)
 end
 
-function mod:SPELL_CAST_START(args)
-	if args.spellId == 23339 then
-		warnWingBuffet:Show()
-		timerWingBuffet:Start()
-	elseif args.spellId == 22539 then
-		warnShadowFlame:Show()
+do
+	local WingBuffet, ShadowFlame = DBM:GetSpellInfo(23339), DBM:GetSpellInfo(22539)
+	function mod:SPELL_CAST_START(args)--did not see ebon use any of these abilities
+		--if args.spellId == 23339 then
+		if args.spellName == WingBuffet then
+			warnWingBuffet:Show()
+			timerWingBuffet:Start()
+		--elseif args.spellId == 22539 then
+		elseif args.spellName == ShadowFlame then
+			warnShadowFlame:Show()
+		end
 	end
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args.spellId == 23342 then
-		warnEnrage:Show()
-		timerEnrageNext:Start()
+do
+	local Frenzy = DBM:GetSpellInfo(23342)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args.spellId == 23342 then
+		if args.spellName == Frenzy and args:IsSrcTypeHostile() then
+			warnFrenzy:Show()
+			timerFrenzyNext:Start()
+		end
 	end
 end

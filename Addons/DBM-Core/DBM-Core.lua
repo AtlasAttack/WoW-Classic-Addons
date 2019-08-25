@@ -68,9 +68,9 @@ local function showRealDate(curseDate)
 end
 
 DBM = {
-	Revision = parseCurseDate("20190814002144"),
-	DisplayVersion = "1.13.1", -- the string that is shown as version
-	ReleaseRevision = releaseDate(2019, 8, 13) -- the date of the latest stable version that is available, optionally pass hours, minutes, and seconds for multiple releases in one day
+	Revision = parseCurseDate("20190824201836"),
+	DisplayVersion = "1.13.2", -- the string that is shown as version
+	ReleaseRevision = releaseDate(2019, 8, 24) -- the date of the latest stable version that is available, optionally pass hours, minutes, and seconds for multiple releases in one day
 }
 DBM.HighestRelease = DBM.ReleaseRevision --Updated if newer version is detected, used by update nags to reflect critical fixes user is missing on boss pulls
 
@@ -3654,6 +3654,8 @@ do
 				self.Options.RaidWarningSound = self.DefaultOptions.RaidWarningSound
 				migrated = true
 			end
+		elseif self.Options.RaidWarningSound == 11742 then--Retail Soundkit ID, user copied wtf from retail to classic, so we need to fix their default sound
+			self.Options.RaidWarningSound = self.DefaultOptions.RaidWarningSound
 		end
 		if type(self.Options.SpecialWarningSound) == "string" and self.Options.SpecialWarningSound ~= "" then
 			local searchMsg = self.Options.SpecialWarningSound:lower()
@@ -3668,6 +3670,8 @@ do
 				self.Options.SpecialWarningSound2 = self.DefaultOptions.SpecialWarningSound2
 				migrated = true
 			end
+		elseif self.Options.SpecialWarningSound2 == 15391 then--Retail Soundkit ID, user copied wtf from retail to classic, so we need to fix their default sound
+			self.Options.SpecialWarningSound2 = self.DefaultOptions.SpecialWarningSound2
 		end
 		if type(self.Options.SpecialWarningSound3) == "string" and self.Options.SpecialWarningSound3 ~= "" then
 			local searchMsg = self.Options.SpecialWarningSound3:lower()
@@ -3682,6 +3686,8 @@ do
 				self.Options.SpecialWarningSound4 = self.DefaultOptions.SpecialWarningSound4
 				migrated = true
 			end
+		elseif self.Options.SpecialWarningSound4 == 9278 then--Retail Soundkit ID, user copied wtf from retail to classic, so we need to fix their default sound
+			self.Options.SpecialWarningSound4 = self.DefaultOptions.SpecialWarningSound4
 		end
 		if type(self.Options.SpecialWarningSound5) == "string" and self.Options.SpecialWarningSound5 ~= "" then
 			local searchMsg = self.Options.SpecialWarningSound5:lower()
@@ -3689,6 +3695,8 @@ do
 				self.Options.SpecialWarningSound5 = self.DefaultOptions.SpecialWarningSound5
 				migrated = true
 			end
+		elseif self.Options.SpecialWarningSound5 == 128466 then--Retail Soundkit ID, user copied wtf from retail to classic, so we need to fix their default sound
+			self.Options.SpecialWarningSound5 = self.DefaultOptions.SpecialWarningSound5
 		end
 		if migrated then
 			self:AddMsg(DBM_CORE_SOUNDKIT_MIGRATION)
@@ -3987,24 +3995,26 @@ do
 			loadModByUnit(uId)
 		end
 		--Debug options for seeing where BossUnitTargetScanner can be used.
-		if (self.Options.DebugLevel > 2 or (Transcriptor and Transcriptor:IsLogging())) and (uId == "boss1" or uId == "boss2" or uId == "boss3" or uId == "boss4" or uId == "boss5") then
-			local targetName = uId == "boss1" and UnitName("boss1target") or uId == "boss2" and UnitName("boss2target") or uId == "boss3" and UnitName("boss3target") or uId == "boss4" and UnitName("boss4target") or uId == "boss5" and UnitName("boss5target") or "nil"
+		if (self.Options.DebugLevel > 2 or (Transcriptor and Transcriptor:IsLogging())) and uId:find("boss") then
+			local targetName = UnitName(uId.."target") or "nil"
 			self:Debug(uId.." changed targets to "..targetName)
 		end
 		--Active BossUnitTargetScanner
-		if targetMonitor[uId] and targetMonitorFilter[uId] and UnitExists(uId.."target") and UnitPlayerOrPetInRaid(uId.."target") then
-			self:Debug("targetMonitor exists, target exists", 2)
-			local modId, unitId, returnFunc = string.split("\t", targetMonitor[uId])
-			self:Debug("targetMonitor: "..modId..", "..unitId..", "..returnFunc, 2)
-			if UnitIsUnit(targetMonitorFilter[uId], unitId.."target") then
-				self:Debug("targetMonitor ending, it's targetMonitorFilter", 2)
-				return
-			end--It's a tank/highest threat, this method ignores tanks
+		if targetMonitor[uId] and UnitExists(uId.."target") and UnitPlayerOrPetInRaid(uId.."target") then
+			self:Debug("targetMonitor for this unit exists, target exists", 2)
+			local modId, returnFunc = targetMonitor[uId].modid, targetMonitor[uId].returnFunc
+			self:Debug("targetMonitor: "..modId..", "..uId..", "..returnFunc, 2)
+			if not targetMonitor[uId].allowTank then
+				local tanking, status = UnitDetailedThreatSituation(uId, uId.."target")--Tanking may return 0 if npc is temporarily looking at an NPC (IE fracture) but status will still be 3 on true tank
+				if tanking or (status == 3) then
+					self:Debug("targetMonitor ending for unit without 'allowTank', ignoring target", 2)
+					return
+				end
+			end
 			local mod = self:GetModByName(modId)
-			self:Debug("targetMonitor success, a valid target that's not a tank", 2)
-			mod[returnFunc](mod, self:GetUnitFullName(unitId.."target"), unitId.."target", unitId)--Return results to warning function with all variables.
+			self:Debug("targetMonitor success for this unit, a valid target for returnFunc", 2)
+			mod[returnFunc](mod, self:GetUnitFullName(uId.."target"), uId.."target", uId)--Return results to warning function with all variables.
 			targetMonitor[uId] = nil
-			targetMonitorFilter[uId] = nil
 		end
 	end
 end
@@ -7476,28 +7486,31 @@ do
 	end
 
 	function bossModPrototype:BossUnitTargetScannerAbort(uId)
-		if uId then
-			targetMonitor[uId] = nil
-			targetMonitorFilter[uId] = nil
-		else--Legacy mod, just wipe entire table
-			twipe(targetMonitor)
-			twipe(targetMonitorFilter)
+		if not uId then--Not called with unit, means mod requested to clear all used units
+			DBM:Debug("BossUnitTargetScannerAbort called without unit, clearing all targetMonitor units", 2)
+			table.wipe(targetMonitor)
+			return
 		end
-		DBM:Debug("Boss unit target scan should be aborting.", 3)
+		if targetMonitor[uId] and targetMonitor[uId].allowTank and UnitExists(uId.."target") and UnitPlayerOrPetInRaid(uId.."target") then
+			self:Debug("targetMonitor unit exists, allowTank target exists", 2)
+			local modId, returnFunc = targetMonitor[uId].modid, targetMonitor[uId].returnFunc
+			self:Debug("targetMonitor: "..modId..", "..uId..", "..returnFunc, 2)
+			local mod = self:GetModByName(modId)
+			self:Debug("targetMonitor found a target that probably is a tank", 2)
+			mod[returnFunc](mod, self:GetUnitFullName(uId.."target"), uId.."target", uId)--Return results to warning function with all variables.
+		end
+		targetMonitor[uId] = nil
+		DBM:Debug("Boss unit target scan should be aborting for "..uId, 3)
 	end
 
-	function bossModPrototype:BossUnitTargetScanner(unitId, returnFunc, scanTime, filteredUnitID)
-		--UNIT_TARGET technique was originally used by DXE on heroic lich king back in wrath to give most accurate defile/shadow trap warnings. Recently bigwigs started using it.
-		--This is fastest and most accurate method for getting the target and probably should be used where it does work 100% of time.
-		--This method fails if boss is already looking at correct target!! This method needs to monitor a target change so it must start before that target change
-		--In most cases, using BossTargetScanner is probably still better, especially if boss is expected to look at target before or immediately on cast start
-		--Limited to only one unitTarget scanner at a time. TODO, maybe make targetMonitor a table or something to support more than one scan at a time?
-		--This code is much prettier if it's in mod, but then it'd require copying and pasting it all the time. SO ugly code in core more convinient.
-		local modId = self.id
+	function bossModPrototype:BossUnitTargetScanner(uId, returnFunc, scanTime, allowTank)
+		--UNIT_TARGET event monitor target scanner. Will instantly detect a target change of a registered Unit
+		--If target change occurs before this method is called (or if boss doesn't change target because cast ends up actually being on the tank, target scan will fail completely
+		--If allowTank is passed, it basically tells this scanner to return current target of unitId at time of failure/abort when scanTime is complete
 		local scanDuration = scanTime or 1.5
-		targetMonitor[unitId] = modId.."\t"..unitId.."\t"..returnFunc
-		targetMonitorFilter[unitId] = filteredUnitID--Required for Classic and BC since there is no threat api to filter tanks by threat, so we hard code a unit to ignore
-		self:ScheduleMethod(scanDuration, "BossUnitTargetScannerAbort", unitId)--In case of BossUnitTargetScanner firing too late, and boss already having changed target before monitor started, it needs to abort after x seconds
+		targetMonitor[uId] = {}
+		targetMonitor[uId].modid, targetMonitor[uId].returnFunc, targetMonitor[uId].allowTank = self.id, returnFunc, allowTank
+		self:ScheduleMethod(scanDuration, "BossUnitTargetScannerAbort", uId)--In case of BossUnitTargetScanner firing too late, and boss already having changed target before monitor started, it needs to abort after x seconds
 	end
 
 	function bossModPrototype:BossTargetScanner(cidOrGuid, returnFunc, scanInterval, scanTimes, scanOnlyBoss, isEnemyScan, isFinalScan, targetFilter, tankFilter)
@@ -7945,7 +7958,7 @@ do
 			--Inspect throttle exists, so have to do it this way
 			if class == "DRUID" or class == "SHAMAN" or class == "PALADIN" then
 				local unitMaxPower = UnitPowerMax(uId)
-				if unitMaxPower < 35000 then
+				if unitMaxPower < 7500 then
 					return true
 				end
 			end
@@ -7970,7 +7983,7 @@ do
 			end
 			--Inspect throttle exists, so have to do it this way
 			if class == "DRUID" or class == "SHAMAN" or class == "PALADIN" then
-				if UnitPowerMax(uId) < 35000 then
+				if UnitPowerMax(uId) < 7500 then
 					return true
 				end
 			end
@@ -8076,8 +8089,7 @@ function bossModPrototype:UnitClass(uId)
 	return playerClass--else return "player"
 end
 
---Needs Review
-function bossModPrototype:IsTanking(unit, boss, isName, onlyRequested)
+function bossModPrototype:IsTanking(unit, boss, isName, onlyRequested, bossGUID)
 	if isName then--Passed combat log name, so pull unit ID
 		unit = DBM:GetRaidUnitId(unit)
 	end
@@ -8085,17 +8097,45 @@ function bossModPrototype:IsTanking(unit, boss, isName, onlyRequested)
 		DBM:Debug("IsTanking passed with invalid unit", 2)
 		return false
 	end
-	--Prefer threat target first
+	--Prefer main target first
 	if boss then--Only checking one bossID as requested
-		local _, targetuid = self:GetBossTarget(UnitGUID(boss), true)
-		if UnitIsUnit(unit, targetuid) then
-			return true
-		end
-	else--Check all of them if one isn't defined
-		for i = 1, 5 do
-			local _, targetuid = self:GetBossTarget(UnitGUID("boss"..i), true)
+		if UnitExists(boss) then
+			local _, targetuid = self:GetBossTarget(UnitGUID(boss), true)
 			if UnitIsUnit(unit, targetuid) then
 				return true
+			end
+		end
+	else
+		--Check all of them if one isn't defined
+		for i = 1, 5 do
+			local unitID = "boss"..i
+			if UnitExists(unitID) then
+				local _, targetuid = self:GetBossTarget(UnitGUID(unitID), true)
+				if UnitIsUnit(unit, targetuid) then
+					return true
+				end
+			end
+		end
+		--Check group targets if no boss unitIDs found, but we have a
+		if bossGUID then
+			if IsInRaid() then
+				for i = 1, GetNumGroupMembers() do
+					if UnitGUID("raid"..i.."target") == bossGUID then
+						local _, targetuid = self:GetBossTarget(bossGUID, true)
+						if UnitIsUnit("raid"..i.."target", targetuid) then
+							return true
+						end
+					end
+				end
+			elseif IsInGroup() then
+				for i = 1, GetNumSubgroupMembers() do
+					if UnitGUID("party"..i.."target") == bossGUID then
+						local _, targetuid = self:GetBossTarget(bossGUID, true)
+						if UnitIsUnit("party"..i.."target", targetuid) then
+							return true
+						end
+					end
+				end
 			end
 		end
 	end

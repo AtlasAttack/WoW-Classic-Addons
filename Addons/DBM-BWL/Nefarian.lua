@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Nefarian-Classic", "DBM-BWL", 1)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516161007")
+mod:SetRevision("20190819025921")
 mod:SetCreatureID(11583)
 mod:SetEncounterID(617)
 mod:SetModelID(11380)
@@ -36,32 +36,44 @@ function mod:OnCombatStart(delay)
 	self.vb.phase = 1
 end
 
-function mod:SPELL_CAST_START(args)
-	if args.spellId == 22539 then
-		warnShadowFlame:Show()
-	elseif args.spellId == 22686 then
-		warnFear:Show()
-		timerFearNext:Start()
+do
+	local ShadowFlame, BellowingRoar = DBM:GetSpellInfo(22539), DBM:GetSpellInfo(22686)
+	function mod:SPELL_CAST_START(args)
+		--if args.spellId == 22539 then
+		if args.spellName == ShadowFlame then
+			warnShadowFlame:Show()
+		--elseif args.spellId == 22686 then
+		elseif args.spellName == BellowingRoar then
+			warnFear:Show()
+			timerFearNext:Start()
+		end
 	end
 end
 
-function mod:SPELL_AURA_APPLIED(args)
-	if args.spellId == 22687 then
-		specwarnVeilShadow:Show(args.destName)
-		specwarnVeilShadow:Play("dispelnow")
-		timerVeilShadow:Start(args.destName)
-	elseif args.spellId == 22667 then
-		specwarnMC:Show(args.destName)
-		specwarnMC:Play("findmc")
-		timerMC:Start(args.destName)
+do
+	local VielShadow, ShadowCommand = DBM:GetSpellInfo(22539), DBM:GetSpellInfo(22667)
+	function mod:SPELL_AURA_APPLIED(args)
+		--if args.spellId == 22687 then
+		if args.spellName == VielShadow then
+			specwarnVeilShadow:Show(args.destName)
+			specwarnVeilShadow:Play("dispelnow")
+			timerVeilShadow:Start(args.destName)
+		--elseif args.spellId == 22667 then
+		elseif args.spellName == ShadowCommand then
+			specwarnMC:Show(args.destName)
+			specwarnMC:Play("findmc")
+			timerMC:Start(args.destName)
+		end
 	end
-end
 
-function mod:SPELL_AURA_REMOVED(args)
-	if args.spellId == 22687 then
-		timerVeilShadow:Stop(args.destName)
-	elseif args.spellId == 22667 then
-		timerMC:Stop(args.destName)
+	function mod:SPELL_AURA_REMOVED(args)
+		--if args.spellId == 22687 then
+		if args.spellName == VielShadow then
+			timerVeilShadow:Stop(args.destName)
+		--elseif args.spellId == 22667 then
+		elseif args.spellName == ShadowCommand then
+			timerMC:Stop(args.destName)
+		end
 	end
 end
 

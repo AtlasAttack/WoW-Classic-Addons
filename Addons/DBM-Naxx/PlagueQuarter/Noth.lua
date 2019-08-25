@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Noth", "DBM-Naxx", 3)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190519032150")
+mod:SetRevision("20190817015725")
 mod:SetCreatureID(15954)
 mod:SetEncounterID(1117)
 mod:SetModelID(16590)
@@ -9,10 +9,12 @@ mod:RegisterCombat("combat_yell", L.Pull)
 
 mod:RegisterEventsInCombat(
 	"SPELL_CAST_SUCCESS 29213 54835 29212",
+	--"CHAT_MSG_MONSTER_YELL",
 	"CHAT_MSG_RAID_BOSS_EMOTE",
 	"UNIT_SPELLCAST_SUCCEEDED boss1"
 )
 
+--TODO, determine if old way is required or if new way is still functional
 local warnTeleportNow	= mod:NewAnnounce("WarningTeleportNow", 3, "135736")
 local warnTeleportSoon	= mod:NewAnnounce("WarningTeleportSoon", 1, "135736")
 local warnCurse			= mod:NewSpellAnnounce(29213, 2)
@@ -28,6 +30,57 @@ mod.vb.teleCount = 0
 mod.vb.addsCount = 0
 mod.vb.curseCount = 0
 
+function mod:Balcony()
+	self.vb.teleCount = self.vb.teleCount + 1
+	self.vb.addsCount = 0
+	timerCurseCD:Stop()
+	timerAddsCD:Stop()
+	local timer
+	if self.vb.teleCount == 1 then
+		timer = 70
+		timerAddsCD:Start(5)--Always 5
+	elseif self.vb.teleCount == 2 then
+		timer = 97
+		timerAddsCD:Start(5)--Always 5
+	elseif self.vb.teleCount == 3 then
+		timer = 126
+		timerAddsCD:Start(5)--Always 5
+	else
+		timer = 55
+	end
+	timerTeleportBack:Start(timer)
+	warnTeleportSoon:Schedule(timer - 20)
+	warnTeleportNow:Show()
+	self:ScheduleMethod(timer, "BackInRoom")
+end
+
+function mod:BackInRoom()
+	self.vb.addsCount = 0
+	self.vb.curseCount = 0
+	timerAddsCD:Stop()
+	local timer
+	if self.vb.teleCount == 1 then
+		timer = 109
+		timerAddsCD:Start(10)
+	elseif self.vb.teleCount == 2 then
+		timer = 173
+		timerAddsCD:Start(17)
+	elseif self.vb.teleCount == 3 then
+		timer = 93
+	else
+		timer = 35
+	end
+	timerTeleport:Start(timer)
+	warnTeleportSoon:Schedule(timer - 20)
+	warnTeleportNow:Show()
+	if self.vb.teleCount == 4 then--11-12 except after 4th return it's 17
+		timerCurseCD:Start(17)--verify consistency though
+	else
+		timerCurseCD:Start(11)
+	end
+	self:ScheduleMethod(timer, "Balcony")
+end
+
 function mod:OnCombatStart(delay)
 	self.vb.teleCount = 0
 	self.vb.addsCount = 0
@@ -36,40 +89,36 @@ function mod:OnCombatStart(delay)
 	timerCurseCD:Start(9.5-delay)
 	timerTeleport:Start(90.8-delay)
 	warnTeleportSoon:Schedule(70.8-delay)
+	self:ScheduleMethod(90.8-delay, "Balcony")
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args:IsSpellID(29213, 54835) then	-- Curse of the Plaguebringer
-		self.vb.curseCount = self.vb.curseCount + 1
-		warnCurse:Show()
-		if self.vb.teleCount == 2 and self.vb.curseCount == 2 or self.vb.teleCount == 3 and self.vb.curseCount == 1 then
-			timerCurseCD:Start(67)--Niche cases it's 67 and not 53-55
-		elseif self.vb.curseCount < 2 then
-			timerCurseCD:Start()
+do
+	local CurseofthePlaguebringer, Cripple = DBM:GetSpellInfo(29213), DBM:GetSpellInfo(29212)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args:IsSpellID(29213, 54835) then -- Curse of the Plaguebringer
+		if args.spellName == CurseofthePlaguebringer then -- Curse of the Plaguebringer
+			self.vb.curseCount = self.vb.curseCount + 1
+			warnCurse:Show()
+			if self.vb.teleCount == 2 and self.vb.curseCount == 2 or self.vb.teleCount == 3 and self.vb.curseCount == 1 then
+				timerCurseCD:Start(67)--Niche cases it's 67 and not 53-55
+			elseif self.vb.curseCount < 2 then
+				timerCurseCD:Start()
+			end
+		--elseif args.spellId == 29212 then--Cripple that's always cast when he teleports away
+		elseif args.spellName == Cripple then--Cripple that's always cast when he teleports away
+			self:UnscheduleMethod("Balcony")
+			self:Balcony()
 		end
-	elseif args.spellId == 29212 then--Cripple that's always cast when he teleports away
-		self.vb.teleCount = self.vb.teleCount + 1
-		self.vb.addsCount = 0
-		timerCurseCD:Stop()
-		timerAddsCD:Stop()
-		local timer
-		if self.vb.teleCount == 1 then
-			timer = 70
-			timerAddsCD:Start(5)--Always 5
-		elseif self.vb.teleCount == 2 then
-			timer = 97
-			timerAddsCD:Start(5)--Always 5
-		elseif self.vb.teleCount == 3 then
-			timer = 126
-			timerAddsCD:Start(5)--Always 5
-		else
-			timer = 55
-		end
-		timerTeleportBack:Start(timer)
-		warnTeleportSoon:Schedule(timer - 20)
-		warnTeleportNow:Show()
 	end
 end
+
+--[[
+function mod:CHAT_MSG_MONSTER_YELL(msg, npc, _, _, target)
+	if msg == L.AddsYell or msg:find(L.AddsYell) then
+		self:SendSync("Adds")--Syncing to help unlocalized clients
+	end
+end
+--]]
 
 function mod:CHAT_MSG_RAID_BOSS_EMOTE(msg, npc, _, _, target)
 	if msg == L.Adds or msg:find(L.Adds) then
@@ -81,29 +130,8 @@ end
 
 function mod:UNIT_SPELLCAST_SUCCEEDED(uId, _, spellId)
 	if spellId == 29231 then--Teleport Return
-		self.vb.addsCount = 0
-		self.vb.curseCount = 0
-		timerAddsCD:Stop()
-		local timer
-		if self.vb.teleCount == 1 then
-			timer = 109
-			timerAddsCD:Start(10)
-		elseif self.vb.teleCount == 2 then
-			timer = 173
-			timerAddsCD:Start(17)
-		elseif self.vb.teleCount == 3 then
-			timer = 93
-		else
-			timer = 35
-		end
-		timerTeleport:Start(timer)
-		warnTeleportSoon:Schedule(timer - 20)
-		warnTeleportNow:Show()
-		if self.vb.teleCount == 4 then--11-12 except after 4th return it's 17
-			timerCurseCD:Start(17)--verify consistency though
-		else
-			timerCurseCD:Start(11)
-		end
+		self:UnscheduleMethod("BackInRoom")
+		self:BackInRoom()
 	end
 end
 

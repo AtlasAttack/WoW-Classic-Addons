@@ -1,7 +1,7 @@
 local mod	= DBM:NewMod("Sartura", "DBM-AQ40", 1)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("20190516161007")
+mod:SetRevision("20190819212906")
 mod:SetCreatureID(15516)
 mod:SetEncounterID(711)
 mod:SetModelID(15583)
@@ -27,17 +27,22 @@ function mod:OnCombatStart(delay)
 	self.vb.prewarn_enrage = false
 end
 
-function mod:SPELL_CAST_SUCCESS(args)
-	if args:IsSpellID(26083) and self:AntiSpam() then--26084
-		timerWhirlwind:Start()
-		if self:CheckInterruptFilter(args.sourceGUID, true) and self.Options.SpecWarn26083run then
-			specWarnWhirlwind:Show()
-			specWarnWhirlwind:Play("justrun")
-		else
-			warnWhirlwind:Show()
+do
+	local Whirlwind, Enrage = DBM:GetSpellInfo(26083), DBM:GetSpellInfo(8269)
+	function mod:SPELL_CAST_SUCCESS(args)
+		--if args:IsSpellID(26083) and self:AntiSpam() then--26084
+		if args.spellName == Whirlwind and args:IsSrcTypeHostile() and self:AntiSpam() then--26084
+			timerWhirlwind:Start()
+			if self:CheckInterruptFilter(args.sourceGUID, true) and self.Options.SpecWarn26083run then
+				specWarnWhirlwind:Show()
+				specWarnWhirlwind:Play("justrun")
+			else
+				warnWhirlwind:Show()
+			end
+		--elseif args.spellId == 8269 then
+		elseif args.spellName == Enrage and args:IsSrcTypeHostile() then
+			warnEnrage:Show()
 		end
-	elseif args.spellId == 8269 then
-		warnEnrage:Show()
 	end
 end
 
